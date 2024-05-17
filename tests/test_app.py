@@ -28,10 +28,52 @@ def test_create_user(client):
     }
 
 
+def test_create_user_route_username_already_exists(client, user):
+    body = {
+        "username": "Teste",
+        "email": "teste2@test.com",
+        "password": "testtest",
+    }
+
+    response = client.post("/users/", json=body)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"detail": "Username already exists"}
+
+
+def test_create_user_route_email_already_exists(client, user):
+    body = {
+        "username": "Teste2",
+        "email": "teste@test.com",
+        "password": "testtest",
+    }
+
+    response = client.post("/users/", json=body)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"detail": "Email already exists"}
+
+
 def test_read_users(client):
     response = client.get("/users")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"users": []}
+
+
+def test_read_user(client, user):
+    response = client.get("/users/1")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        "id": 1,
+        "username": "Teste",
+        "email": "teste@test.com",
+    }
+
+
+def test_read_user_not_found(client, user):
+    response = client.get("/users/10")
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {"detail": "User not found"}
 
 
 def test_read_users_with_users(client, user):
