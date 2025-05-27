@@ -30,6 +30,32 @@ def test_create_user(client):
     }
 
 
+def test_create_user_with_username_already_exists(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': user.username,
+            'email': 'alice@example.com',
+            'password': 'secret',
+        },
+    )
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Username already exists'}
+
+
+def test_create_user_with_email_already_exists(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': 'alice',
+            'email': user.email,
+            'password': 'secret',
+        },
+    )
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Email already exists'}
+
+
 def test_read_user(client, user):
     # Converte um user do banco de dados para o schema UserPublic
     user_schema = UserPublic.model_validate(user).model_dump()
@@ -44,6 +70,7 @@ def test_read_user_with_user_inexistent(client):
     response = client.get('/users/10')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found!'}
 
 
 def test_read_users(client, user):
@@ -106,9 +133,7 @@ def test_update_integrity_error(client, user):
     )
 
     assert response.status_code == HTTPStatus.CONFLICT
-    assert response.json() == {
-        'detail': 'Username or Email already exists'
-    }
+    assert response.json() == {'detail': 'Username or Email already exists'}
 
 
 def test_update_user_with_user_inexistent(client, user):
@@ -122,6 +147,7 @@ def test_update_user_with_user_inexistent(client, user):
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found!'}
 
 
 def test_delete_user(client, user):
@@ -135,6 +161,7 @@ def test_delete_user_with_user_inexistent(client, user):
     response = client.delete('/users/10')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found!'}
 
 
 def test_ola_mundo_html(client):
