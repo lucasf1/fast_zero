@@ -21,14 +21,14 @@ from fast_zero.security import (
 
 router = APIRouter(prefix='/todos', tags=['todos'])
 
-CurrentSession = Annotated[AsyncSession, Depends(get_session)]
+Session = Annotated[AsyncSession, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.post('/', response_model=TodoPublic)
 async def create_todo(
     todo: TodoSchema,
-    session: CurrentSession,
+    session: Session,
     user: CurrentUser,
 ):
     db_todo = Todo(
@@ -47,7 +47,7 @@ async def create_todo(
 
 @router.get('/', response_model=TodoList)
 async def list_todos(
-    session: CurrentSession,
+    session: Session,
     user: CurrentUser,
     todo_filter: Annotated[FilterTodo, Query()],
 ):
@@ -72,9 +72,7 @@ async def list_todos(
 
 
 @router.delete('/{todo_id}', response_model=Message)
-async def delete_todo(
-    todo_id: int, session: CurrentSession, user: CurrentUser
-):
+async def delete_todo(todo_id: int, session: Session, user: CurrentUser):
     todo = await session.scalar(
         select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
     )
@@ -92,7 +90,7 @@ async def delete_todo(
 
 @router.patch('/{todo_id}', response_model=TodoPublic)
 async def patch_todo(
-    todo_id: int, session: CurrentSession, user: CurrentUser, todo: TodoUpdate
+    todo_id: int, session: Session, user: CurrentUser, todo: TodoUpdate
 ):
     db_todo = await session.scalar(
         select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
